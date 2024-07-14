@@ -8,7 +8,7 @@ class Embeddings(nn.Module):
         self.embedding = nn.Embedding(config.vocabulary_size, config.d_model, padding_idx=0)
 
     def forward(self, inputs: torch.Tensor) -> torch.Tensor:
-        return self.embeddings(inputs)
+        return self.embedding(inputs)
 
 
 
