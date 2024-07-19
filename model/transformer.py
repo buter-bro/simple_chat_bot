@@ -12,10 +12,10 @@ class Decoder(nn.Module):
 
         self.layers = nn.ModuleList([DecoderLayer(config) for _ in range(config.layers_num)])
 
-    def forward(self, decoder_inputs: torch.Tensor, decoder_mask: torch.Tensor = None) -> torch.Tensor:
+    def forward(self, decoder_inputs: torch.Tensor, positional_encoding, decoder_mask: torch.Tensor = None) -> torch.Tensor:
         outputs = decoder_inputs
         for decoder_layer in self.layers:
-            outputs = decoder_layer(outputs, decoder_mask)
+            outputs = decoder_layer(outputs, positional_encoding, decoder_mask)
         return outputs
 
 
@@ -40,12 +40,13 @@ class Transformer(nn.Module):
         super(Transformer, self).__init__()
 
         self.embeddings = Embeddings(config.model)
+        self.embeddings_dropout = nn.Dropout(p=config.model.dropout_rate)
         self.decoder = Decoder(config.model)
         self.output = TransformerOutput(config.model)
 
-    def forward(self, decoder_inputs: torch.Tensor, decoder_mask: torch.Tensor = None) -> torch.Tensor:
-        embedded_inputs = self.embeddings(decoder_inputs)
-        decoder_output = self.decoder(embedded_inputs, decoder_mask)
+    def forward(self, decoder_inputs: torch.Tensor, positional_encoding, decoder_mask: torch.Tensor = None) -> torch.Tensor:
+        embedded_inputs = self.embeddings_dropout(self.embeddings(decoder_inputs))
+        decoder_output = self.decoder(embedded_inputs, positional_encoding, decoder_mask)
         output = self.output(decoder_output)
         return output
 

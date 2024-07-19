@@ -25,11 +25,23 @@ class MultiHeadAttention(nn.Module):
         nn.init.xavier_uniform_(self.weights_o.weight)
 
     def forward(self, queries: torch.Tensor, keys: torch.Tensor, values: torch.Tensor,
-                mask: torch.Tensor = None) -> (torch.Tensor, torch.Tensor):
+                positional_encoding, mask: torch.Tensor = None) -> (torch.Tensor, torch.Tensor):
 
         weighted_queries = self.weights_q(queries)
         weighted_keys = self.weights_k(keys)
         weighted_values = self.weights_v(values)
+
+        # Rotation positional encodings (RoPE)
+        rotated_weighted_queries = positional_encoding(weighted_queries)
+        rotated_weighted_keys = positional_encoding(weighted_keys)
+        rotated_weighted_values = positional_encoding(weighted_values)
+
+        attention = self.sdpa(rotated_weighted_queries, rotated_weighted_keys, rotated_weighted_values, mask)
+
+        batch_size = queries.size(0)
+        z = attention.transpose(1, 2).contiguous().view(batch_size, -1, self.config.d_model)
+
+        return self.weights_o(z)
 
 
 class FeedForward(nn.Module):

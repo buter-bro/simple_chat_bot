@@ -15,14 +15,15 @@ class TinyStoriesDataset(Dataset):
 
     def _init_preprocessors(self):
         raw_data_path = os.path.join(self.config.path_to_data, f"{SetType.train.name}.csv")
-        self.preprocessors = Preprocessing(self.config.preprocessing, raw_data_path, self.config.vocabulary_size)
+        self.preprocessor = Preprocessing(self.config.preprocessing, raw_data_path, self.config.vocabulary_size)
 
     def _get_data(self):
         """Gets data to pass to Transformer model."""
 
-        if self.set_type == SetType.test:
-            self.dataset = [{'id': idx, 'tokens': []} for idx in range(len(self.dataset))]
-            return
+        # self.dataset = []
+        # if self.set_type == SetType.test:
+        #     self.dataset = [{'id': idx, 'tokens': []} for idx in range(len(self.dataset))]
+        #     return
 
         preprocessed_data_path = os.path.join(
             self.config.path_to_data,
@@ -32,15 +33,15 @@ class TinyStoriesDataset(Dataset):
             self.config.path_to_data, self.config.preprocessing.tokenizer_path
         )
 
-        if not os.path.exists(preprocessed_data_path):
+        if not os.path.exists(preprocessed_data_path) or SetType.test:
             self.encode_data(tokenizer_path_to_load, preprocessed_data_path)
         else:
             self.dataset = read_file(preprocessed_data_path)
-            self.preprocessors.load_tokenizer_state(tokenizer_path_to_load)
+            self.preprocessor.load_tokenizer_state(tokenizer_path_to_load)
 
     def encode_data(self, tokenizer_path_to_load: str, preprocessed_data_path: str):
 
-        self.preprocessors.train(tokenizer_path_to_load)
+        self.preprocessor.train(tokenizer_path_to_load)
 
         raw_data_path = os.path.join(
             self.config.path_to_data, self.config.preprocessing.raw_data_path_template % self.set_type.name
@@ -50,7 +51,7 @@ class TinyStoriesDataset(Dataset):
         self.dataset = []
 
         for idx, text in enumerate(raw_data):
-            tokens = self.preprocessors.encode(text)
+            tokens = self.preprocessor.encode(text)
             self.dataset.append({'id': idx, 'tokens': tokens})
 
         write_file(self.dataset, preprocessed_data_path)

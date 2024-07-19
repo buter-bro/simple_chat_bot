@@ -14,3 +14,8 @@ class WeightsInitType(IntEnum):
     xavier_normal = 4
     kaiming_uniform = 5
     kaiming_normal = 6
+
+
+class InferenceType(IntEnum):
+    greedy = 1
+    temperature = 2

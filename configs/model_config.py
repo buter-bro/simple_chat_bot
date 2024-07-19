@@ -5,7 +5,7 @@ model_cfg = EasyDict()
 
 model_cfg.decoder = EasyDict()
 model_cfg.decoder.d_model = 512
-model_cfg.decoder.vocabulary_size = 50257
+model_cfg.decoder.vocabulary_size = 50362
 model_cfg.decoder.heads_num = 16
 model_cfg.decoder.layers_num = 8
 

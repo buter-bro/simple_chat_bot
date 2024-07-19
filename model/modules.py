@@ -26,13 +26,10 @@ class ScaledDotProductAttention(nn.Module):
 
 
 class RotaryPositionalEncoding(nn.Module):
-    def __init__(self, d_model: int, seq_len: int, dropout_rate: float):
+    def __init__(self, d_model: int, device='cpu'):
         super(RotaryPositionalEncoding, self).__init__()
         self.d_model = d_model
-        self.seq_len = seq_len
-        self.cos_rotation_matrix, self.sin_rotation_matrix = self.get_rotation_matrices(d_model, seq_len)
-
-        self.dropout = nn.Dropout(dropout_rate)
+        self.device = device
 
     @staticmethod
     def get_rotation_matrices(d_model, seq_len):
@@ -57,8 +54,14 @@ class RotaryPositionalEncoding(nn.Module):
         return shifted_inputs
 
     def forward(self, inputs: torch.Tensor) -> torch.Tensor:
-        rotated_inputs = self.cos_rotation_matrix * inputs + self.sin_rotation_matrix * self.get_shifted_inputs(inputs)
-        return self.dropout(rotated_inputs)
+        seq_len = inputs.shape[1]
+        cos_rotation_matrix, sin_rotation_matrix = self.get_rotation_matrices(self.d_model, seq_len)
+        cos_rotation_matrix = cos_rotation_matrix.to(self.device)
+        sin_rotation_matrix = cos_rotation_matrix.to(self.device)
+
+        shifted_inputs = self.get_shifted_inputs(inputs).to(self.device)
+        rotated_inputs = cos_rotation_matrix * inputs + sin_rotation_matrix * shifted_inputs
+        return rotated_inputs
 
 
 
