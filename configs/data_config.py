@@ -5,7 +5,7 @@ data_cfg = EasyDict()
 
 data_cfg.tinystories_dataset = EasyDict()
 data_cfg.tinystories_dataset.name = 'TinyStoriesDataset'
-data_cfg.tinystories_dataset.path_to_data = 'data/tinystories_dataset_v1'
+data_cfg.tinystories_dataset.path_to_data = '/kaggle/input/tinystories-dataset-v1/tinystories_dataset_v1'
 data_cfg.tinystories_dataset.vocabulary_size = 15000
 
 data_cfg.tinystories_dataset.preprocessing = EasyDict()
