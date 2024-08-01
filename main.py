@@ -13,7 +13,7 @@ import tracemalloc
 
 
 def train():
-    trainer = Trainer(experiment_cfg)
+    trainer = Trainer(experiment_cfg, init_logger=False)
     trainer.fit()
     # trainer.batch_overfit()
 
@@ -53,8 +53,8 @@ def predict(std_mode=False):
 
 
 if __name__ == '__main__':
-    # train()
-    predict(std_mode=True)
+    train()
+    # predict(std_mode=True)
 
 
 
