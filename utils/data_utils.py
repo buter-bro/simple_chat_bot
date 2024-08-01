@@ -16,7 +16,7 @@ def collate_function(batch):
     for sample in batch:
         decoder_inputs.append(torch.tensor(sample['tokens'][:-1]))
         decoder_outputs.append(torch.tensor(sample['tokens'][1:]))
-        sample_indices.append(torch.tensor(sample['sample_pair_id']))
+        sample_indices.append(torch.tensor(sample['sample_id']))
 
     decoder_inputs = pad_sequence(decoder_inputs, batch_first=True)
     decoder_outputs = pad_sequence(decoder_outputs, batch_first=True)
@@ -25,3 +25,20 @@ def collate_function(batch):
     decoder_mask = get_decoder_mask(decoder_inputs)
 
     return sample_indices, decoder_inputs, decoder_outputs, decoder_mask
+
+
+def preprocess_data_files(raw_file_path: str, preprocessed_file_path: str):
+    stories = []
+    with open(raw_file_path, 'r', encoding="utf8") as file:
+        story = ''
+        for line in file.read().splitlines():
+            if line == '<|endoftext|>':
+                stories.append(story)
+                story = ''
+                continue
+            story += line
+    with open(preprocessed_file_path, 'w', encoding="utf8") as file:
+        for line in stories:
+            file.write(line + '\n')
+
+

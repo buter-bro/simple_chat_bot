@@ -35,17 +35,18 @@ class Trainer:
         self._prepare_model()
 
     def _prepare_data(self):
-        self.dataset = getattr(sys.modules[__name__], self.config.data_cfg.name)
+        self.dataset = getattr(sys.modules[__name__], self.config.data.name)
 
-        self.train_dataset = self.dataset(self.config.data_cfg, SetType.train)
-        self.validation_dataset = self.dataset(self.config.data_cfg, SetType.validation)
+        self.train_dataset = self.dataset(self.config.data, SetType.train)
+        self.validation_dataset = self.dataset(self.config.data, SetType.validation)
 
         # Train dataloader
         self.train_dataloader = DataLoader(
             self.train_dataset,
             batch_size=self.config.train.batch_size,
             collate_fn=collate_function,
-            shuffle=True
+            # There is no consistency in data -> no need for shuffle
+            # shuffle=True
         )
 
         # Evaluation train dataloader
@@ -60,13 +61,16 @@ class Trainer:
             self.validation_dataset,
             batch_size=self.config.validation.batch_size,
             collate_fn=collate_function,
-            shuffle=True
+            # There is no consistency in data -> no need for shuffle
+            # shuffle=True
         )
 
     def _prepare_model(self):
 
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.model = Transformer(self.config).to(self.device)
+
+        decoder_vocabulary_size = self.train_dataset.get_vocabulary_size()
+        self.model = Transformer(self.config, decoder_vocabulary_size).to(self.device)
         self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.config.train.lr)
         self.criterion = nn.CrossEntropyLoss(
             ignore_index=self.config.data.preprocessing.special_tokens.index('[PAD]') - 1,
@@ -112,19 +116,14 @@ class Trainer:
             os.path.join(self.config.checkpoints_dir, filepath)
         )
 
-    @staticmethod
-    def checkpoints_sorting_keys(line):
-        return int(line.split('_')[1])
-
-    def get_last_or_best_checkpoint(self):
-        if os.path.isfile(os.path.join(self.config.checkpoints_dir, self.config.best_checkpoint_name)):
-            return os.path.join(self.config.checkpoints_dir, self.config.best_checkpoint_name)
-        checkpoints_list = os.listdir(self.config.checkpoints_dir)
-        checkpoints_list.sort(key=self.checkpoints_sorting_keys, reverse=True)
-        return os.path.join(self.config.checkpoints_dir, checkpoints_list[0])
+    def get_last_checkpoint(self):
+        checkpoints_list = [os.path.join(self.config.checkpoints_dir, f) for f in os.listdir(self.config.checkpoints_dir)]
+        checkpoints_list.sort(key=lambda x: os.path.getmtime(x), reverse=True)
+        return checkpoints_list[0]
 
     def load(self, filepath: str):
-        checkpoint = torch.load(os.path.join(self.config.checkpoints_dir, filepath), map_location=self.device)
+        # checkpoint = torch.load(os.path.join(self.config.checkpoints_dir, filepath), map_location=self.device)
+        checkpoint = torch.load(filepath, map_location=self.device)
         self.model.load_state_dict(checkpoint['model_state_dict'])
         self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         self.scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
@@ -167,8 +166,8 @@ class Trainer:
         steps_done = epoch * len(self.train_dataloader)
         steps_in_epoch = len(self.train_dataloader)
 
-        for step, batch in tqdm(enumerate(self.train_dataloader), total=steps_in_epoch // self.config.train.accum_gradient_iter):
-            if self.config.train.continue_train and step <= self.config.train.checkpoint_from_step % steps_in_epoch:
+        for step, batch in tqdm(enumerate(self.train_dataloader), total=steps_in_epoch):
+            if self.config.train.continue_train and step + steps_done <= self.config.train.checkpoint_from_step:
                 continue
 
             # Gradient accumulation for memory efficiency
@@ -191,9 +190,10 @@ class Trainer:
 
             # Evaluate performance on the validation data
             if step % self.config.train.validation_frequency == 0:
-
-                val_interval = [100, 100 + self.config.train.validation_interval]
-                valid_loss, valid_metric = self.evaluate(self.validation_dataloader, interval=val_interval)
+                print('Train evaluation started')
+                val_interval = [0, self.config.train.validation_interval]
+                valid_loss, valid_metric = self.evaluate(self.validation_dataloader, val_interval)
+                print('Train evaluation finished')
 
                 self.logger.save_metrics(SetType.validation.name, 'loss', valid_loss, step=steps_done + step)
                 self.logger.save_metrics(SetType.validation.name, 'perplexity', valid_metric, step=steps_done + step)
@@ -213,14 +213,14 @@ class Trainer:
                 self.save(
                     self.config.checkpoint_name % (steps_done + step)
                 )
-                checkpoints_list = os.listdir(self.config.checkpoints_dir)
-                checkpoints_list.sort(key=self.checkpoints_sorting_keys)
+
+                checkpoints_list = [os.path.join(self.config.checkpoints_dir, f) for f in
+                                    os.listdir(self.config.checkpoints_dir)]
+                checkpoints_list.sort(key=lambda x: os.path.getmtime(x))
                 checkpoints_to_delete = checkpoints_list[:-self.config.checkpoint_files_count]
                 for c in checkpoints_to_delete:
                     os.remove(os.path.join(self.config.checkpoints_dir, c))
 
-            if step % 1500 == 0 and hasattr(torch.cuda, 'empty_cache'):
-                torch.cuda.empty_cache()
 
     @torch.no_grad()
     def evaluate(self, dataloader: DataLoader, interval: List[int] = None, inference: bool = False):
@@ -259,8 +259,10 @@ class Trainer:
         perplexity = self.metric.compute()
         self.metric.reset()
 
-        if hasattr(torch.cuda, 'empty_cache'):
+        if hasattr(torch.cuda, 'empty_cache') and interval is None:
             torch.cuda.empty_cache()
+
+        all_predictions, all_decoder_outputs = [], []
 
         self.model.train()
         return total_loss, perplexity.item()
@@ -289,18 +291,18 @@ class Trainer:
     def inference(self, sequence: torch.Tensor, inference_config):
         self.model.eval()
         batch_size = sequence.size(0)
+        input_size = sequence.size(-1)
         sos_token_id = self.config.data.preprocessing.special_tokens.index("[SOS]")
         eos_token_id = self.config.data.preprocessing.special_tokens.index("[EOS]")
         # decoded_sequence = torch.ones((batch_size, 1), dtype=torch.int32, device=self.device) * sos_token_id
         decoded_sequence = sequence
-        inference_step = decoded_sequence.size(-1) - 1
+        inference_step = input_size - 1
         finished_sequences = torch.zeros(batch_size, dtype=torch.bool, device=self.device)
 
-        while not finished_sequences.all() and inference_step < inference_config.stop_predict:
+        while not finished_sequences.all() and inference_step < input_size + inference_config.stop_predict:
 
             decoder_mask = get_decoder_mask(decoded_sequence, device=self.device)
-            decoder_inputs_embeddings = self.model.embeddings(decoded_sequence)
-            output = self.model.decoder(decoder_inputs_embeddings, self.positional_encoding, decoder_mask)
+            output = self.model(decoded_sequence, self.positional_encoding, decoder_mask)
 
             if inference_config.type == InferenceType.greedy.value:
                 current_token = torch.argmax(output, dim=-1)[:, inference_step].view(-1, 1) + 1
@@ -344,20 +346,24 @@ class Trainer:
 
         if self.config.train.continue_train:
             step = self.config.train.checkpoint_from_step
-            best_or_last_checkpoint = self.get_last_or_best_checkpoint()
-            self.load(best_or_last_checkpoint)
+            last_checkpoint = self.get_last_checkpoint()
+            self.load(last_checkpoint)
             start_epoch = step // len(self.train_dataloader)
 
         for epoch in range(start_epoch, self.config.train.num_epoches):
+            print(f'Train epoch {epoch} started')
             self.train_epoch(epoch)
+            print(f'Train epoch {epoch} finished')
+            print(f'Validation epoch {epoch} started')
             _, valid_metric = self.evaluate(self.validation_dataloader)
-            _, eval_train_metric = self.evaluate(self.eval_train_dataloader)
+            print(f'Validation epoch {epoch} finished')
+            # _, eval_train_metric = self.evaluate(self.eval_train_dataloader)
 
             self.update_params(valid_metric, best_metric)
 
-            step = epoch * len(self.train_dataloader) - 1
+            step = (epoch + 1) * len(self.train_dataloader) - 1
             self.logger.save_metrics(SetType.validation.name + '_eval', 'perplexity', valid_metric, step=step)
-            self.logger.save_metrics(SetType.train.name + '_eval', 'perplexity', eval_train_metric, step=step)
+            # self.logger.save_metrics(SetType.train.name + '_eval', 'perplexity', eval_train_metric, step=step)
             self.save(self.config.checkpoint_name % step)
 
     def batch_overfit(self):

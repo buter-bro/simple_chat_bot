@@ -25,13 +25,13 @@ class TransformerOutput(nn.Module):
         super(TransformerOutput, self).__init__()
         self.output_feed_forward = nn.Linear(
             config.d_model,
-            decoder_vocabulary_size - 1
+            decoder_vocabulary_size - 1,
+            bias=False
         )
         self._init_weights()
 
     def _init_weights(self):
         nn.init.xavier_uniform_(self.output_feed_forward.weight)
-        nn.init.zeros_(self.output_feed_forward.bias)
 
     def forward(self, inputs):
         return self.output_feed_forward(inputs)
@@ -44,12 +44,13 @@ class Transformer(nn.Module):
         self.embeddings = Embeddings(config.model, decoder_vocabulary_size)
         self.embeddings_dropout = nn.Dropout(p=config.model.dropout_rate)
         self.decoder = Decoder(config.model)
+        self.final_layer_norm = nn.LayerNorm(config.model.d_model)
         self.output = TransformerOutput(config.model, decoder_vocabulary_size)
 
     def forward(self, decoder_inputs: torch.Tensor, positional_encoding, decoder_mask: torch.Tensor = None) -> torch.Tensor:
         embedded_inputs = self.embeddings_dropout(self.embeddings(decoder_inputs))
         decoder_output = self.decoder(embedded_inputs, positional_encoding, decoder_mask)
-        output = self.output(decoder_output)
+        output = self.output(self.final_layer_norm(decoder_output))
         return output
 
 
