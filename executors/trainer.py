@@ -6,7 +6,7 @@ from tqdm.auto import tqdm
 
 import torch.optim.adamw
 
-from utils.enums import SetType, InferenceType
+from utils.enums import SetType, InferenceType, InferenceMode
 from typing import List
 
 from dataset.tinystories_dataset import TinyStoriesDataset
@@ -294,22 +294,22 @@ class Trainer:
         input_size = sequence.size(-1)
         sos_token_id = self.config.data.preprocessing.special_tokens.index("[SOS]")
         eos_token_id = self.config.data.preprocessing.special_tokens.index("[EOS]")
-        # decoded_sequence = torch.ones((batch_size, 1), dtype=torch.int32, device=self.device) * sos_token_id
+
         decoded_sequence = sequence
+
         inference_step = input_size - 1
         finished_sequences = torch.zeros(batch_size, dtype=torch.bool, device=self.device)
-
         while not finished_sequences.all() and inference_step < input_size + inference_config.stop_predict:
 
             decoder_mask = get_decoder_mask(decoded_sequence, device=self.device)
             output = self.model(decoded_sequence, self.positional_encoding, decoder_mask)
 
             if inference_config.type == InferenceType.greedy.value:
-                current_token = torch.argmax(output, dim=-1)[:, inference_step].view(-1, 1) + 1
+                current_token = torch.argmax(output, dim=-1)[:, -1].view(-1, 1) + 1
             elif inference_config.type == InferenceType.temperature.value:
                 output = output / (inference_config.temperature_value + inference_config.eps)
                 probabilities = softmax(output, dim=-1)
-                current_token = probabilities[:, inference_step, :].multinomial(num_samples=1) + 1
+                current_token = probabilities[:, -1, :].multinomial(num_samples=1) + 1
             else:
                 raise Exception('Unknown inference type!')
 

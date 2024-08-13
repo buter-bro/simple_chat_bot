@@ -1,0 +1,17 @@
+# 1. Select a Base Image
+FROM python:3.9
+# 2. Set the working directory
+WORKDIR /etc/simple_chat_bot/code
+
+# 3. Copy project files
+COPY ./utils/ /etc/simple_chat_bot/code/simple_chat_bot/utils
+COPY ./requirements_streamlit.txt /etc/simple_chat_bot/code/simple_chat_bot/requirements_streamlit.txt
+COPY ./main_streamlit.py /etc/simple_chat_bot/code/simple_chat_bot/main_streamlit.py
+COPY ./configs/ /etc/simple_chat_bot/code/simple_chat_bot/configs
+
+
+# 5. Install dependencies
+RUN pip install --no-cache-dir -r /etc/simple_chat_bot/code/simple_chat_bot/requirements_streamlit.txt
+
+# 6. Command to run on container start
+CMD streamlit run ./simple_chat_bot/main_streamlit.py --server.port=8501 --server.address=0.0.0.0

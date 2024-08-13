@@ -10,6 +10,7 @@ def get_decoder_mask(sequence: torch.Tensor, pad_id: int = 0, device='cpu'):
     return torch.max(padding_mask, future_positions_mask)
 
 
+
 def collate_function(batch):
     decoder_inputs, decoder_outputs, sample_indices = [], [], []
 

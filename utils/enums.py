@@ -19,3 +19,8 @@ class WeightsInitType(IntEnum):
 class InferenceType(IntEnum):
     greedy = 1
     temperature = 2
+
+
+class InferenceMode(IntEnum):
+    token = 1
+    sentence = 2

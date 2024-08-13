@@ -1,6 +1,6 @@
 from easydict import EasyDict
 from configs.data_config import data_cfg
-from configs.model_config import model_cfg
+from configs.model_config import model_cfg, model_cfg_v1
 from utils.enums import InferenceType
 import os
 
@@ -18,7 +18,7 @@ experiment_cfg.train.label_smoothing = 0
 experiment_cfg.train.warmup_steps = 1000
 # experiment_cfg.train.T_max = 10000
 experiment_cfg.train.continue_train = True
-experiment_cfg.train.checkpoint_from_step = 318657
+experiment_cfg.train.checkpoint_from_step = 60781
 experiment_cfg.train.num_epoches = 5
 experiment_cfg.train.validation_frequency = 4000
 experiment_cfg.train.validation_interval = 400
@@ -34,7 +34,7 @@ experiment_cfg.mlflow = EasyDict()
 experiment_cfg.mlflow.dependencies_path = 'requirements.txt'
 experiment_cfg.mlflow.experiment_name = "simple_chat_bot"
 experiment_cfg.mlflow.tracking_uri = None
-experiment_cfg.mlflow.run_id = '9bd416801c2b4cb4be67dbe53859422c'
+experiment_cfg.mlflow.run_id = 'd2a2f948c1cc4751a89f6d275e61d55b'
 
 # Checkpoints parameters
 # experiment_cfg.checkpoints_dir = os.path.join(
@@ -47,13 +47,16 @@ experiment_cfg.checkpoint_save_frequency = 400
 experiment_cfg.checkpoint_files_count = 10
 experiment_cfg.checkpoint_name = 'checkpoint_%s'
 experiment_cfg.best_checkpoint_name = 'best_checkpoint'
+experiment_cfg.checkpoint_to_load = os.path.join(
+    ROOT_DIR, 'experiments', 'no_f_ln_version', 'checkpoint_360914'
+)
 
 experiment_cfg.overfit = EasyDict()
 experiment_cfg.overfit.num_iterations = 500
 
 # Inference parameters
 experiment_cfg.inference = EasyDict()
-experiment_cfg.inference.type = InferenceType.greedy
-experiment_cfg.inference.temperature_value = 1
+experiment_cfg.inference.type = InferenceType.temperature
+experiment_cfg.inference.temperature_value = 0.1
 experiment_cfg.inference.eps = 1e-9
-experiment_cfg.inference.stop_predict = 1000  # Maximum number of inference steps (i.e. generated sequence length)
+experiment_cfg.inference.stop_predict = 200  # Maximum number of inference steps (i.e. generated sequence length)
