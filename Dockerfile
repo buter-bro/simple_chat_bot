@@ -10,8 +10,8 @@ COPY ./configs/ /etc/simple_chat_bot/code/simple_chat_bot/configs
 COPY ./requirements.txt /etc/simple_chat_bot/code/simple_chat_bot/requirements.txt
 
 # костыль, переписать
-COPY ./experiments/no_f_ln_version/checkpoint_360914 /etc/simple_chat_bot/code/simple_chat_bot/experiments/no_f_ln_version/checkpoint_360914
-COPY ./data/tinystories_dataset_v1/tokenization.pickle /etc/simple_chat_bot/code/simple_chat_bot/data/tinystories_dataset_v1/tokenization.pickle
+COPY ./export/checkpoint_360914 /etc/simple_chat_bot/code/simple_chat_bot/experiments/no_f_ln_version/checkpoint_360914
+COPY ./export/tokenization.pickle /etc/simple_chat_bot/code/simple_chat_bot/data/tinystories_dataset_v1/tokenization.pickle
 
 ENV PYTHONPATH "${PYTHONPATH}:/etc/simple_chat_bot/code/simple_chat_bot"
 
