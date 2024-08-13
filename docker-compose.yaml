@@ -7,7 +7,9 @@ services:
       - 8005:8005
 
     volumes:
-      - .:/etc/simple_chat_bot/code/simple_chat_bot/
+      - ~/simple_chat_bot/simple_chat_bot/configs/experiment_config.py:/etc/simple_chat_bot/code/simple_chat_bot/configs/experiment_config.py
+      - ~/simple_chat_bot/simple_chat_bot/configs/model_config.py:/etc/simple_chat_bot/code/simple_chat_bot/configs/model_config.py
+      - ~/simple_chat_bot/simple_chat_bot/configs/data_config.py:/etc/simple_chat_bot/code/simple_chat_bot/configs/data_config.py
 
   streamlit:
     container_name: streamlit_app
@@ -18,6 +20,3 @@ services:
       - 8501:8501
     depends_on:
       - simple_chat_bot
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-#docker run -d -p 8005:8005 -v C:\Users\Pavel\Desktop\ai_course_python_files\capstone_project\simple_chat_bot\configs\experiment_config.py:/etc/simple_chat_bot/code/simple_chat_bot/configs/experiment_config.py -v C:\Users\Pavel\Desktop\ai_course_python_files\capstone_project\simple_chat_bot\configs\model_config.py:/etc/simple_chat_bot/code/simple_chat_bot/configs/model_config.py -v C:\Users\Pavel\Desktop\ai_course_python_files\capstone_project\simple_chat_bot\configs\data_config.py:/etc/simple_chat_bot/code/simple_chat_bot/configs/data_config.py --name simple_chat_bot_app simple_chat_bot
