@@ -57,6 +57,6 @@ experiment_cfg.overfit.num_iterations = 500
 # Inference parameters
 experiment_cfg.inference = EasyDict()
 experiment_cfg.inference.type = InferenceType.temperature
-experiment_cfg.inference.temperature_value = 0.1
+experiment_cfg.inference.temperature_value = 0.9
 experiment_cfg.inference.eps = 1e-9
 experiment_cfg.inference.stop_predict = 200  # Maximum number of inference steps (i.e. generated sequence length)
