@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile_test
-    image: simple_chat_bot
+#    image: simple_chat_bot
 
     ports:
       - 8005:8005
