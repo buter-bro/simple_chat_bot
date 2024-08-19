@@ -46,19 +46,3 @@ if prompt := st.chat_input():
         response = st.write_stream(itertools.chain(re.split('( )', prompt + ' '), response_generator(prompt)))
     st.session_state.messages.append({"role": "assistant", "content": response})
 
-
-    #
-    # async def get_bot_response():
-    #     response_placeholder = st.empty()
-    #     bot_response = prompt + " "
-    #     async for response_chunk in send_receive(prompt):
-    #         bot_response += response_chunk + ' '
-    #         response_placeholder.markdown(bot_response)
-    #     response_placeholder.markdown(bot_response)
-    #     st.session_state.messages.append({"role": "assistant", "content": bot_response})
-    #
-    # with st.chat_message("assistant"):
-    #     asyncio.run(get_bot_response())
-
-
-

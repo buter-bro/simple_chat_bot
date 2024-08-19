@@ -110,7 +110,7 @@ class Generate:
             self.config.data.preprocessing.special_tokens
         )
 
-        return output_text.split()
+        return output_text
 
 
 

@@ -7,7 +7,7 @@ services:
       - 8005:8005
 
     volumes:
-      - ~/simple_chat_bot/simple_chat_bot/configs/experiment_config.py:/etc/simple_chat_bot/code/simple_chat_bot/configs/experiment_config.py
+      - ~/simple_chat_bot/simple_chat_bot/configs/experiment_config.py:/etc/simple_chat_bot/code/simple_chat_bot/configs/generate_config.py
       - ~/simple_chat_bot/simple_chat_bot/configs/model_config.py:/etc/simple_chat_bot/code/simple_chat_bot/configs/model_config.py
       - ~/simple_chat_bot/simple_chat_bot/configs/data_config.py:/etc/simple_chat_bot/code/simple_chat_bot/configs/data_config.py
 

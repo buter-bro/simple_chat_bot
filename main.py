@@ -1,5 +1,6 @@
 from executors.trainer import Trainer
 from configs.experiment_config import experiment_cfg
+from configs.generation_config import generation_cfg
 import sys
 from utils.enums import SetType, InferenceMode
 from torch.utils.data import DataLoader
@@ -36,8 +37,7 @@ def validate():
 
 def predict(std_mode=False, inference_mode=InferenceMode.sentence):
 
-    model_path = 'experiments/no_f_ln_version/checkpoint_360914'
-    token_generator = Generate(experiment_cfg)
+    token_generator = Generate(generation_cfg)
 
     if std_mode:
         while True:
@@ -72,7 +72,7 @@ def predict(std_mode=False, inference_mode=InferenceMode.sentence):
 
 if __name__ == '__main__':
     # train()
-    predict(std_mode=True, inference_mode=InferenceMode.token)
+    predict(std_mode=True, inference_mode=InferenceMode.sentence)
     # validate()
 
 

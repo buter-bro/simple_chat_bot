@@ -3,11 +3,11 @@ from fastapi.responses import StreamingResponse
 from starlette.responses import PlainTextResponse, HTMLResponse
 from pydantic import BaseModel
 
-from configs.experiment_config import experiment_cfg
+from configs.generation_config import generation_cfg
 from model.generate import Generate
 
 router = APIRouter()
-token_generator = Generate(experiment_cfg)
+token_generator = Generate(generation_cfg)
 
 
 class InputText(BaseModel):
