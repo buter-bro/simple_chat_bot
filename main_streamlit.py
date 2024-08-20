@@ -3,11 +3,17 @@ import requests
 import websocket
 import itertools
 import re
+import json
 
 
-def send_generation_request(endpoint, data):
+def send_generation_sequence_request(prompt, temperature, eps, host='127.0.0.1', port='8005'):
 
-    url = f"http://simple_chat_bot:8005/{endpoint}"
+    url = f"http://{host}:{port}/generate_sentence"
+    data = {
+        'input_text': prompt,
+        'temperature':  temperature,
+        'eps': eps
+    }
     try:
         response = requests.post(url, json=data)
         response.raise_for_status()  # Raise an HTTPError for bad responses
@@ -16,9 +22,16 @@ def send_generation_request(endpoint, data):
         return None
 
 
-def response_generator(prompt, host='simple_chat_bot', port='8005'):
+def response_generator(prompt, temperature, eps, host='127.0.0.1', port='8005'):
+
+    data = {
+        'prompt': prompt,
+        'temperature': temperature,
+        'eps': eps
+    }
+    data_to_load = json.dumps(data)
     ws = websocket.create_connection(f"ws://{host}:{port}/ws")
-    ws.send(prompt)
+    ws.send(data_to_load)
     while True:
         response = ws.recv()
         if response == '[EOS]':
@@ -29,6 +42,13 @@ def response_generator(prompt, host='simple_chat_bot', port='8005'):
 
 st.title("Tiny stories chat bot")
 st.caption("")
+
+temperature = st.slider("Select temperature", 0.0, 1.0, value=0.9, step=0.1)
+
+generate_mode = st.selectbox(
+    "Select generate mode",
+    ("by token", "all at once"),
+)
 
 if "messages" not in st.session_state:
     st.session_state["messages"] = [{"role": "assistant", "content": "Start a simple story:"}]
@@ -43,6 +63,14 @@ if prompt := st.chat_input():
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        response = st.write_stream(itertools.chain(re.split('( )', prompt + ' '), response_generator(prompt)))
+        if generate_mode == 'by token':
+            response = st.write_stream(
+                itertools.chain(re.split('( )', prompt + ' '), response_generator(
+                    prompt, temperature, 1e-9
+                ))
+            )
+        elif generate_mode == 'all at once':
+            response = send_generation_sequence_request(prompt, temperature, 1e-9)
+            st.write(response)
     st.session_state.messages.append({"role": "assistant", "content": response})
 

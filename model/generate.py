@@ -40,17 +40,19 @@ class Generate:
         self.model.eval()
         self.positional_encoding = RotaryPositionalEncoding(self.config.model.d_model, self.device)
 
-    def inference_output(self, output, inference_config):
-        if inference_config.type == InferenceType.greedy.value:
-            return torch.argmax(output, dim=-1)[:, -1].view(-1, 1) + 1
-        elif inference_config.type == InferenceType.temperature.value:
-            output = output / (inference_config.temperature_value + inference_config.eps)
-            probabilities = softmax(output, dim=-1)
-            return probabilities[:, -1, :].multinomial(num_samples=1) + 1
-        else:
-            raise Exception('Unknown inference type!')
+    @staticmethod
+    def inference_output(output, temperature, eps):
+        output = output / (temperature + eps)
+        probabilities = softmax(output, dim=-1)
+        return probabilities[:, -1, :].multinomial(num_samples=1) + 1
 
-    def generate_token(self, input_text):
+    def generate_token(self, input_text, inference_prefs=None):
+
+        if inference_prefs is None:
+            inference_prefs = {
+                'temperature': self.config.inference.temperature_value,
+                'eps': self.config.inference.eps
+            }
 
         sequence = torch.tensor(self.encode(
             input_text,
@@ -61,7 +63,7 @@ class Generate:
         decoder_mask = get_decoder_mask(sequence, device=self.device)
 
         output = self.model(sequence, self.positional_encoding, decoder_mask)
-        current_token = self.inference_output(output, self.config.inference)
+        current_token = self.inference_output(output, **inference_prefs)
 
         output_token = self.decode(
             current_token.reshape(1).cpu().tolist(),
@@ -72,13 +74,25 @@ class Generate:
         )
         return output_token
 
-    async def token_generator(self, input_text):
+    async def token_generator(self, input_text, inference_prefs=None):
         for i in range(self.config.inference.stop_predict):
-            output_token = self.generate_token(input_text)
+            output_token = self.generate_token(input_text, inference_prefs)
             input_text += output_token + ' '
             yield output_token
 
-    def generate_sequence(self, input_text):
+    def token_generator_not_async(self, input_text, inference_prefs=None):
+        for i in range(self.config.inference.stop_predict):
+            output_token = self.generate_token(input_text, inference_prefs)
+            input_text += output_token + ' '
+            yield output_token
+
+    def generate_sequence(self, input_text, inference_prefs=None):
+
+        if inference_prefs is None:
+            inference_prefs = {
+                'temperature': self.config.inference.temperature_value,
+                'eps': self.config.inference.eps
+            }
 
         sequence = torch.tensor(self.encode(
             input_text,
@@ -94,7 +108,7 @@ class Generate:
         while not finished_sequences.all() and inference_step < input_size + self.config.inference.stop_predict:
             decoder_mask = get_decoder_mask(decoded_sequence, device=self.device)
             output = self.model(decoded_sequence, self.positional_encoding, decoder_mask)
-            current_token = self.inference_output(output, self.config.inference)
+            current_token = self.inference_output(output, **inference_prefs)
 
             decoded_sequence = torch.hstack([decoded_sequence, current_token])
             finished_sequences |= current_token.squeeze() == self.eos_token_id

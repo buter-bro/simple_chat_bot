@@ -15,7 +15,6 @@ generation_cfg.checkpoint_to_load = os.path.join(
 )
 
 generation_cfg.inference = EasyDict()
-generation_cfg.inference.type = InferenceType.greedy
 generation_cfg.inference.temperature_value = 0.95
 generation_cfg.inference.eps = 1e-9
 generation_cfg.inference.stop_predict = 200

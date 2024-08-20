@@ -35,44 +35,30 @@ def validate():
     print(f'Loss: {total_loss}\nPerplexity: {perplexity}')
 
 
-def predict(std_mode=False, inference_mode=InferenceMode.sentence):
+def predict(inference_mode=InferenceMode.sentence):
 
     token_generator = Generate(generation_cfg)
 
-    if std_mode:
-        while True:
-            input_text = input('Start a story: ')
-            if input_text == 'exit':
-                break
-            if input_text == '':
-                input_text += '[SOS]'
+    while True:
+        input_text = input('Start a story: ')
+        if input_text == 'exit':
+            break
+        if input_text == '':
+            input_text += '[SOS]'
 
-            if inference_mode == InferenceMode.sentence:
-                output_text = token_generator.generate_sequence(input_text)
-                print(output_text)
-            elif inference_mode == InferenceMode.token:
-                for output_token in token_generator.token_generator(input_text):
-                    print(output_token + ' ', end='')
-    else:
-        # Get data to make predictions on
-        test_dataset = dataset(experiment_cfg.data, SetType.test)
-        test_dataloader = DataLoader(
-            test_dataset, experiment_cfg.train.validation_batch_size, collate_fn=collate_function, shuffle=False
-        )
-
-        # Get predictions
-        model_path = experiment_cfg.best_checkpoint_name
-        predictions, sample_ids = trainer.predict(model_path, test_dataloader, experiment_cfg.inference)
-
-        # Save results to submission file
-        test_results_df = pd.DataFrame({'ID': sample_ids, 'prediction': predictions})
-        test_results_df['prediction'] = test_results_df['prediction'].replace('', ' ')
-        test_results_df.to_csv('test_predictions.csv', index=False)
+        if inference_mode == InferenceMode.sentence:
+            output_text = token_generator.generate_sequence(input_text)
+            print(output_text)
+        elif inference_mode == InferenceMode.token:
+            for output_token in token_generator.token_generator_not_async(input_text):
+                if output_token == '[EOS]':
+                    break
+                print(output_token + ' ', end='')
 
 
 if __name__ == '__main__':
-    # train()
-    predict(std_mode=True, inference_mode=InferenceMode.sentence)
+    train()
+    # predict(inference_mode=InferenceMode.sentence)
     # validate()
 
 
