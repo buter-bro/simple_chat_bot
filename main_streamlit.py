@@ -6,7 +6,7 @@ import re
 import json
 
 
-def send_generation_sequence_request(prompt, temperature, eps, host='127.0.0.1', port='8005'):
+def send_generation_sequence_request(prompt, temperature, eps, host='simple_chat_bot', port='8005'):
 
     url = f"http://{host}:{port}/generate_sentence"
     data = {
@@ -22,7 +22,7 @@ def send_generation_sequence_request(prompt, temperature, eps, host='127.0.0.1',
         return None
 
 
-def response_generator(prompt, temperature, eps, host='127.0.0.1', port='8005'):
+def response_generator(prompt, temperature, eps, host='simple_chat_bot', port='8005'):
 
     data = {
         'prompt': prompt,
