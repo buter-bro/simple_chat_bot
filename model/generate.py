@@ -51,6 +51,7 @@ class Generate:
         if inference_prefs is None:
             inference_prefs = {
                 'temperature': self.config.inference.temperature_value,
+                'stop_predict': self.config.inference.stop_predict,
                 'eps': self.config.inference.eps
             }
 
@@ -74,19 +75,26 @@ class Generate:
         )
         return output_token
 
-    async def token_generator(self, input_text, inference_prefs=None):
-        for i in range(self.config.inference.stop_predict):
+    async def token_generator(self, input_text, stop_predict=None, inference_prefs=None):
+        if stop_predict is None:
+            stop_predict = self.config.inference.stop_predict
+        for i in range(stop_predict):
             output_token = self.generate_token(input_text, inference_prefs)
             input_text += output_token + ' '
             yield output_token
 
-    def token_generator_not_async(self, input_text, inference_prefs=None):
-        for i in range(self.config.inference.stop_predict):
+    def token_generator_not_async(self, input_text, stop_predict=None, inference_prefs=None):
+        if stop_predict is None:
+            stop_predict = self.config.inference.stop_predict
+        for i in range(stop_predict):
             output_token = self.generate_token(input_text, inference_prefs)
             input_text += output_token + ' '
             yield output_token
 
-    def generate_sequence(self, input_text, inference_prefs=None):
+    def generate_sequence(self, input_text, stop_predict=None, inference_prefs=None):
+
+        if stop_predict is None:
+            stop_predict = self.config.inference.stop_predict
 
         if inference_prefs is None:
             inference_prefs = {
@@ -105,7 +113,7 @@ class Generate:
         inference_step = input_size - 1
 
         finished_sequences = torch.zeros(1, dtype=torch.bool, device=self.device)
-        while not finished_sequences.all() and inference_step < input_size + self.config.inference.stop_predict:
+        while not finished_sequences.all() and inference_step < input_size + stop_predict:
             decoder_mask = get_decoder_mask(decoded_sequence, device=self.device)
             output = self.model(decoded_sequence, self.positional_encoding, decoder_mask)
             current_token = self.inference_output(output, **inference_prefs)

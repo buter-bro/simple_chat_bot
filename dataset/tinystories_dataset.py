@@ -22,11 +22,6 @@ class TinyStoriesDataset(Dataset):
     def _get_data(self):
         """Gets data to pass to Transformer model."""
 
-        # self.dataset = []
-        # if self.set_type == SetType.test:
-        #     self.dataset = [{'id': idx, 'tokens': []} for idx in range(len(self.dataset))]
-        #     return
-
         preprocessed_data_path = os.path.join(
             self.config.path_to_data,
             self.config.preprocessing.preprocessed_data_path_template % self.set_type.name

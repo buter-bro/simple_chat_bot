@@ -15,6 +15,7 @@ token_generator = Generate(generation_cfg)
 class InputText(BaseModel):
     input_text: str
     temperature: float
+    stop_predict: int
     eps: float
 
 
@@ -27,7 +28,7 @@ async def websocket_endpoint(websocket: WebSocket):
         'temperature': input_data['temperature'],
         'eps': input_data['eps']
     }
-    generator = token_generator.token_generator(input_data['prompt'], inference_prefs)
+    generator = token_generator.token_generator(input_data['prompt'], input_data['stop_predict'], inference_prefs)
     async for text in generator:
         await websocket.send_text(text)
     await websocket.send_text("[EOS]")
@@ -39,7 +40,7 @@ async def generate_endpoint(input_data: InputText):
         'temperature': input_data.temperature,
         'eps': input_data.eps
     }
-    output_text = token_generator.generate_sequence(input_data.input_text, inference_prefs=inference_prefs)
+    output_text = token_generator.generate_sequence(input_data.input_text, input_data.stop_predict, inference_prefs)
     return PlainTextResponse(output_text)
 
 

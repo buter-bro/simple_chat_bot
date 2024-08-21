@@ -29,7 +29,7 @@ def validate():
         batch_size=experiment_cfg.validation.batch_size,
         collate_fn=collate_function
     )
-    model_path = 'experiments/no_f_ln_version/checkpoint_360914'
+    model_path = 'experiments/f_ln_version/checkpoint_68400'
     trainer.load(model_path)
     total_loss, perplexity = trainer.evaluate(validation_dataloader)
     print(f'Loss: {total_loss}\nPerplexity: {perplexity}')
@@ -57,9 +57,9 @@ def predict(inference_mode=InferenceMode.sentence):
 
 
 if __name__ == '__main__':
-    train()
+    # train()
     # predict(inference_mode=InferenceMode.sentence)
-    # validate()
+    validate()
 
 
 

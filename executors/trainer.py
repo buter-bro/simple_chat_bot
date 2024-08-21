@@ -13,7 +13,7 @@ from dataset.tinystories_dataset import TinyStoriesDataset
 from torch.utils.data import DataLoader
 from utils.data_utils import collate_function
 
-from model.transformer import Transformer
+from model.transformer_v1 import Transformer
 from torch import nn
 from torch.optim.lr_scheduler import LinearLR, CosineAnnealingLR, SequentialLR
 from utils.training_utils import cosine_annealing_with_warmup
@@ -45,8 +45,6 @@ class Trainer:
             self.train_dataset,
             batch_size=self.config.train.batch_size,
             collate_fn=collate_function,
-            # There is no consistency in data -> no need for shuffle
-            # shuffle=True
         )
 
         # Evaluation train dataloader
@@ -61,8 +59,6 @@ class Trainer:
             self.validation_dataset,
             batch_size=self.config.validation.batch_size,
             collate_fn=collate_function,
-            # There is no consistency in data -> no need for shuffle
-            # shuffle=True
         )
 
     def _prepare_model(self):

@@ -6,12 +6,13 @@ import re
 import json
 
 
-def send_generation_sequence_request(prompt, temperature, eps, host='simple_chat_bot', port='8005'):
+def send_generation_sequence_request(prompt, temperature, stop_predict, eps, host='simple_chat_bot', port='8005'):
 
     url = f"http://{host}:{port}/generate_sentence"
     data = {
         'input_text': prompt,
         'temperature':  temperature,
+        'stop_predict': stop_predict,
         'eps': eps
     }
     try:
@@ -22,11 +23,12 @@ def send_generation_sequence_request(prompt, temperature, eps, host='simple_chat
         return None
 
 
-def response_generator(prompt, temperature, eps, host='simple_chat_bot', port='8005'):
+def response_generator(prompt, temperature, stop_predict, eps, host='simple_chat_bot', port='8005'):
 
     data = {
         'prompt': prompt,
         'temperature': temperature,
+        'stop_predict': stop_predict,
         'eps': eps
     }
     data_to_load = json.dumps(data)
@@ -45,10 +47,13 @@ st.caption("")
 
 temperature = st.slider("Select temperature", 0.0, 1.0, value=0.9, step=0.1)
 
+stop_predict = st.slider("Select max sequence length in tokens", 50, 500, value=200, step=1)
+
 generate_mode = st.selectbox(
-    "Select generate mode",
+    "Select generation mode",
     ("by token", "all at once"),
 )
+
 
 if "messages" not in st.session_state:
     st.session_state["messages"] = [{"role": "assistant", "content": "Start a simple story:"}]
@@ -66,11 +71,11 @@ if prompt := st.chat_input():
         if generate_mode == 'by token':
             response = st.write_stream(
                 itertools.chain(re.split('( )', prompt + ' '), response_generator(
-                    prompt, temperature, 1e-9
+                    prompt, temperature, stop_predict, 1e-9
                 ))
             )
         elif generate_mode == 'all at once':
-            response = send_generation_sequence_request(prompt, temperature, 1e-9)
+            response = send_generation_sequence_request(prompt, temperature, stop_predict, 1e-9)
             st.write(response)
     st.session_state.messages.append({"role": "assistant", "content": response})
 
