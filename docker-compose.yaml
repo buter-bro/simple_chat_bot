@@ -32,5 +32,5 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
     depends_on:
-      - simple_chat_bot_app
-      - streamlit_app
+      - simple_chat_bot
+      - streamlit
