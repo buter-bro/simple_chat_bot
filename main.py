@@ -57,9 +57,9 @@ def predict(inference_mode=InferenceMode.sentence):
 
 
 if __name__ == '__main__':
-    # train()
+    train()
     # predict(inference_mode=InferenceMode.sentence)
-    validate()
+    # validate()
 
 
 

@@ -13,7 +13,7 @@ from dataset.tinystories_dataset import TinyStoriesDataset
 from torch.utils.data import DataLoader
 from utils.data_utils import collate_function
 
-from model.transformer_v1 import Transformer
+from model.transformer import Transformer
 from torch import nn
 from torch.optim.lr_scheduler import LinearLR, CosineAnnealingLR, SequentialLR
 from utils.training_utils import cosine_annealing_with_warmup
