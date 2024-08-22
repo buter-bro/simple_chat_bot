@@ -3,7 +3,7 @@ services:
     container_name: simple_chat_bot_app
     build:
       context: .
-      dockerfile: Dockerfile_test
+      dockerfile: Dockerfile
 #    image: simple_chat_bot
 
     ports:
