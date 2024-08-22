@@ -11,7 +11,7 @@ generation_cfg.data = data_cfg.tinystories_dataset
 generation_cfg.model = model_cfg.decoder
 
 generation_cfg.checkpoint_to_load = os.path.join(
-    ROOT_DIR, 'experiments', 'no_f_ln_version', 'checkpoint_512371'
+    ROOT_DIR, 'export', 'best_checkpoint'
 )
 
 generation_cfg.inference = EasyDict()
