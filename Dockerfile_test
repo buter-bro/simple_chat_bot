@@ -1,4 +1,4 @@
-FROM simple_chat_bot:latest
+FROM simple_chat_bot_simple_chat_bot:latest
 
 COPY ./model/ /etc/simple_chat_bot/code/simple_chat_bot/model
 COPY ./export/checkpoint_512371 /etc/simple_chat_bot/code/simple_chat_bot/experiments/no_f_ln_version/checkpoint_512371
