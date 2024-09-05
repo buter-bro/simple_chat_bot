@@ -4,7 +4,7 @@ from dataset.preprocessing import Preprocessing
 import os
 from utils.enums import SetType
 from utils.common_functions import read_file, write_file
-import json
+
 
 class TinyStoriesDataset(Dataset):
     def __init__(self, config, set_type: SetType):
@@ -37,7 +37,7 @@ class TinyStoriesDataset(Dataset):
             self.preprocessor.load_tokenizer_state(tokenizer_path_to_load)
 
     def encode_data(self, tokenizer_path_to_load: str, preprocessed_data_path: str):
-
+        """Encoding data using BPETokenizer"""
         self.preprocessor.train(tokenizer_path_to_load)
 
         raw_data_path = os.path.join(

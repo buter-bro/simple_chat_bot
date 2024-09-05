@@ -20,17 +20,17 @@ services:
       context: .
       dockerfile: StreamlitDockerfile
     ports:
-      - 8501:8501
+      - 8080:80
     depends_on:
       - simple_chat_bot
 
-  nginx:
-    container_name: nginx
-    image: nginx:latest
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
-    depends_on:
-      - simple_chat_bot
-      - streamlit
+#  nginx:
+#    container_name: nginx
+#    image: nginx:latest
+#    ports:
+#      - 80:80
+#    volumes:
+#      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+#    depends_on:
+#      - simple_chat_bot
+#      - streamlit
