@@ -22,7 +22,7 @@ class Generate:
 
         self._init_model(config.checkpoint_to_load)
 
-        tokenizer_path = os.path.join(config.data.path_to_data, config.data.preprocessing.tokenizer_path)
+        tokenizer_path = config.data.preprocessing.tokenizer_path
         if os.path.isfile(tokenizer_path):
             self.tokenizer = read_file(tokenizer_path)
         else:
