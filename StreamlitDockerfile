@@ -14,4 +14,4 @@ COPY ./configs/ /etc/simple_chat_bot/code/simple_chat_bot/configs
 RUN pip install --no-cache-dir -r /etc/simple_chat_bot/code/simple_chat_bot/requirements_streamlit.txt
 
 # 6. Command to run on container start
-CMD streamlit run ./simple_chat_bot/main_streamlit.py --server.port=8080 --server.address=0.0.0.0
+CMD streamlit run ./simple_chat_bot/main_streamlit.py --server.port=80 --server.address=0.0.0.0
