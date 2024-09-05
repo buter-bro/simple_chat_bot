@@ -19,7 +19,7 @@ experiment_cfg.train.label_smoothing = 0
 experiment_cfg.train.warmup_steps = 1000
 # experiment_cfg.train.T_max = 10000
 experiment_cfg.train.continue_train = True
-experiment_cfg.train.checkpoint_from_step = 666371
+experiment_cfg.train.checkpoint_from_step = 681028
 experiment_cfg.train.num_epoches = 5
 experiment_cfg.train.validation_frequency = 4000
 experiment_cfg.train.validation_interval = 400
@@ -49,7 +49,7 @@ experiment_cfg.checkpoint_files_count = 10
 experiment_cfg.checkpoint_name = 'checkpoint_%s'
 experiment_cfg.best_checkpoint_name = 'best_checkpoint'
 experiment_cfg.checkpoint_to_load = os.path.join(
-    ROOT_DIR, 'experiments', 'no_f_ln_version', 'checkpoint_591171'
+    ROOT_DIR, 'experiments', 'no_f_ln_version', 'best_checkpoint'
 )
 
 experiment_cfg.overfit = EasyDict()
