@@ -1,8 +1,6 @@
 FROM simple_chat_bot_simple_chat_bot:latest
 
 COPY ./model/ /etc/simple_chat_bot/code/simple_chat_bot/model
-COPY ./export/best_checkpoint /etc/simple_chat_bot/code/simple_chat_bot/export/best_checkpoint
-COPY ./api/ /etc/simple_chat_bot/code/simple_chat_bot/api
 COPY ./configs/ /etc/simple_chat_bot/code/simple_chat_bot/configs
 
 CMD ["uvicorn", "simple_chat_bot.main_api:app", "--host", "0.0.0.0", "--port", "8005"]
