@@ -7,7 +7,7 @@ services:
 #    image: simple_chat_bot
 
     ports:
-      - 8005:8005
+      - 127.0.0.1:8005:8005
 
     volumes:
       - ~/simple_chat_bot/simple_chat_bot/configs/experiment_config.py:/etc/simple_chat_bot/code/simple_chat_bot/configs/generate_config.py
