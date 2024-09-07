@@ -20,6 +20,9 @@ services:
       context: .
       dockerfile: StreamlitDockerfile
     ports:
-      - 80:80
+      - 443:8501
+    volumes:
+      - /etc/letsencrypt/live/tschatbotbb.online/fullchain.pem:/etc/simple_chat_bot/fullchain.pem
+      - /etc/letsencrypt/live/tschatbotbb.online/privkey.pem:/etc/simple_chat_bot/privkey.pem
     depends_on:
       - simple_chat_bot
