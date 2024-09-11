@@ -17,7 +17,7 @@ model_cfg_v1 = EasyDict()
 model_cfg_v1.decoder = EasyDict()
 model_cfg_v1.decoder.d_model = 512
 model_cfg_v1.decoder.heads_num = 16
-model_cfg_v1.decoder.layers_num = 8
+model_cfg_v1.decoder.layers_num = 6
 
 model_cfg_v1.decoder.d_ff = 2048
 model_cfg_v1.decoder.activation = 'GELU'

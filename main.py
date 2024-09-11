@@ -11,8 +11,6 @@ import os
 import pandas as pd
 from model.generate import Generate
 
-import tracemalloc
-
 
 def train():
     trainer = Trainer(experiment_cfg)

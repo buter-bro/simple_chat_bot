@@ -11,7 +11,7 @@ COPY ./requirements.txt /etc/simple_chat_bot/code/simple_chat_bot/requirements.t
 
 # костыль, переписать
 COPY ./export/best_checkpoint /etc/simple_chat_bot/code/simple_chat_bot/export/best_checkpoint
-COPY ./export/tokenization.pickle /etc/simple_chat_bot/code/simple_chat_bot/export/tokenization.pickle
+COPY export/tokenization_15k_old.pickle /etc/simple_chat_bot/code/simple_chat_bot/export/tokenization.pickle
 
 ENV PYTHONPATH "${PYTHONPATH}:/etc/simple_chat_bot/code/simple_chat_bot"
 

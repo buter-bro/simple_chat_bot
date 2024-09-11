@@ -3,8 +3,9 @@ import os
 import random
 import numpy as np
 from tqdm.auto import tqdm
+import torch
 
-import torch.optim.adamw
+from torch.optim import AdamW
 
 from utils.enums import SetType, InferenceType, InferenceMode
 from typing import List
@@ -13,7 +14,7 @@ from dataset.tinystories_dataset import TinyStoriesDataset
 from torch.utils.data import DataLoader
 from utils.data_utils import collate_function
 
-from model.transformer import Transformer
+from model.transformer import Transformer, TransformerV1
 from torch import nn
 from torch.optim.lr_scheduler import LinearLR, CosineAnnealingLR, SequentialLR
 from utils.training_utils import cosine_annealing_with_warmup
@@ -66,8 +67,12 @@ class Trainer:
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
         decoder_vocabulary_size = self.train_dataset.get_vocabulary_size()
-        self.model = Transformer(self.config, decoder_vocabulary_size).to(self.device)
-        self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.config.train.lr)
+        self.model = getattr(sys.modules[__name__], self.config.model_name)(
+            self.config, decoder_vocabulary_size
+        ).to(self.device)
+        self.optimizer = getattr(sys.modules[__name__], self.config.optimizer)(
+            self.model.parameters(), lr=self.config.train.lr
+        )
         self.criterion = nn.CrossEntropyLoss(
             ignore_index=self.config.data.preprocessing.special_tokens.index('[PAD]') - 1,
             label_smoothing=self.config.train.label_smoothing
@@ -204,6 +209,7 @@ class Trainer:
                 self.logger.save_metrics(SetType.train.name, 'perplexity', train_metric, step=steps_done + step)
                 print(output_to_show)
                 train_losses, train_predictions, train_decoder_outputs = [], [], []
+                torch.cuda.empty_cache()
 
             if step % self.config.checkpoint_save_frequency == 0:
                 self.save(
@@ -382,11 +388,7 @@ class Trainer:
                     prediction_with_pad[i][decoder_outputs[i] != pad_idx].tolist() for i in range(len(decoder_outputs))
                 ]
 
-                self.metric.update(torch.tensor(output), torch.tensor(decoder_outputs) - 1)
-                perplexity = self.metric.compute()
-                self.metric.reset()
-
-                # perplexity = np.exp(loss)
+                perplexity = np.exp(loss)
 
                 self.logger.save_metrics('overfit', 'perplexity', perplexity, step=step)
                 self.logger.save_metrics('overfit', 'loss', loss, step=step)
@@ -394,7 +396,7 @@ class Trainer:
                 random_sample_num = random.randint(0, len(batch) - 1)
 
                 print(f'Step: {step}')
-                targets_decoded = preprocessor.tokenizer.decode(decoder_outputs[random_sample_num])
+                targets_decoded = preprocessor.tokenizer.decode(decoder_outputs[random_sample_num].tolist())
                 predictions_decoded = preprocessor.tokenizer.decode((np.array(predictions[random_sample_num]) + 1).tolist())
                 output_to_show = f'Target:     {targets_decoded}\n' \
                                  f'Prediction: {predictions_decoded}\n'

@@ -5,6 +5,7 @@ import sys
 from collections import defaultdict
 from typing import Union
 from tqdm import tqdm
+import youtokentome as yttm
 
 
 class BPETokenizer:
@@ -14,7 +15,7 @@ class BPETokenizer:
         'Neural Machine Translation of Rare Words with Subword Units' (https://aclanthology.org/P16-1162.pdf)
     """
 
-    def __init__(self, special_tokens: list[str], end_of_word: str, vocabulary_size: int, lowercase: bool = False):
+    def __init__(self, config, vocabulary_size):
         """Tokenizer initialization.
 
         Args:
@@ -23,12 +24,13 @@ class BPETokenizer:
             vocabulary_size: desired vocabulary size
             lowercase: if to lowercase training texts
         """
-        self.special_tokens = special_tokens
-        self.end_of_word = end_of_word
-        self.use_unk_token = '[UNK]' in special_tokens
-        self.use_bounds_tokens = '[SOS]' in special_tokens and '[EOS]' in special_tokens
+        self.config = config
+        self.special_tokens = config.special_tokens
+        self.end_of_word = config.end_of_word
+        self.use_unk_token = '[UNK]' in self.special_tokens
+        self.use_bounds_tokens = '[SOS]' in self.special_tokens and '[EOS]' in self.special_tokens
         self.vocabulary_size = vocabulary_size
-        self.lowercase = lowercase
+        self.lowercase = config.lowercase
 
         self._init_vocabulary()
 
@@ -244,6 +246,44 @@ class BPETokenizer:
         return len(self.id2token)
 
 
+class YouTokenToMe:
+    def __init__(self, config, vocabulary_size):
+        self.config = config
+        self.vocabulary_size = vocabulary_size
+        self.use_bounds_tokens = '[SOS]' in self.config.special_tokens and '[EOS]' in self.config.special_tokens
+
+    def load(self, path):
+        self.tokenizer = yttm.BPE(model=path)
+
+    def train(self):
+        self.tokenizer = yttm.BPE.train(
+            data=os.path.join(self.config.path_to_data, 'train.txt'),
+            model=self.config.tokenizer_path,
+            vocab_size=self.vocabulary_size,
+            coverage=1,
+            n_threads=-1,
+            pad_id=0,
+            unk_id=3,
+            bos_id=1,
+            eos_id=2
+        )
+
+    def tokenize(self, text):
+        return self.tokenizer.encode(text, output_type=yttm.OutputType.SUBWORD)
+
+    def encode(self, text: str):
+        if self.use_bounds_tokens:
+            return self.tokenizer.encode(text, output_type=yttm.OutputType.ID, bos=True, eos=True)
+        return self.tokenizer.encode(text, output_type=yttm.OutputType.ID)
+
+    def decode(self, tokens: list, skip_special_tokens: bool = True):
+        if skip_special_tokens:
+            return self.tokenizer.decode(tokens, ignore_ids=[0, 1, 2, 3])
+        return self.tokenizer.decode(tokens)
+
+    def get_vocab_size(self) -> int:
+        return self.tokenizer.vocab_size()
+
 class Preprocessing:
     """A class for raw text data preprocessing using BPE algorithm."""
 
@@ -255,15 +295,23 @@ class Preprocessing:
 
     def _init_tokenizer(self, vocabulary_size: int):
         """Initializes BPE tokenizer."""
-        self.tokenizer = BPETokenizer(self.config.special_tokens, self.config.end_of_word, vocabulary_size)
+        self.tokenizer = getattr(sys.modules[__name__], self.config.tokenizer)(self.config, vocabulary_size)
 
     def train(self, tokenizer_path: str):
         """Gets trained BPE tokenizer."""
-        if os.path.exists(tokenizer_path):
-            self.load_tokenizer_state(tokenizer_path)
+        if self.config.tokenizer == 'BPETokenizer':
+            if os.path.exists(tokenizer_path):
+                self.load_tokenizer_state(tokenizer_path)
+            else:
+                self.tokenizer.train(self.train_data_path)
+                self.save_tokenizer_state(tokenizer_path)
+        elif self.config.tokenizer == 'YouTokenToMe':
+            if os.path.exists(tokenizer_path):
+                self.load_tokenizer_state(tokenizer_path)
+            else:
+                self.tokenizer.train()
         else:
-            self.tokenizer.train(self.train_data_path)
-            self.save_tokenizer_state(tokenizer_path)
+            raise Exception("Tokenizer doesn't exist!")
 
     def save_tokenizer_state(self, path_to_save: str):
         """Saves tokenizer state."""
