@@ -20,13 +20,13 @@ experiment_cfg.train.label_smoothing = 0
 experiment_cfg.train.warmup_steps = 1000
 # experiment_cfg.train.T_max = 10000
 experiment_cfg.train.continue_train = True
-experiment_cfg.train.checkpoint_from_step = 4400
+experiment_cfg.train.checkpoint_from_step = 62980
 experiment_cfg.train.num_epoches = 3
 experiment_cfg.train.validation_frequency = 4000
 experiment_cfg.train.validation_interval = 400
 experiment_cfg.train.log_frequency = 100
 experiment_cfg.train.log_window = 100
-experiment_cfg.train.accum_gradient_iter = 16
+experiment_cfg.train.accum_gradient_iter = 24
 
 experiment_cfg.validation = EasyDict()
 experiment_cfg.validation.batch_size = 16

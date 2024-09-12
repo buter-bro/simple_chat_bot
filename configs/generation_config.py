@@ -7,11 +7,13 @@ import os
 ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
 
 generation_cfg = EasyDict()
+generation_cfg.tokenizer_name = 'YouTokenToMe'
+generation_cfg.model_name = 'TransformerV1'
 generation_cfg.data = data_cfg.tinystories_dataset
-generation_cfg.model = model_cfg.decoder
+generation_cfg.model = model_cfg_v1.decoder
 
 generation_cfg.checkpoint_to_load = os.path.join(
-    ROOT_DIR, 'export', 'best_checkpoint'
+    ROOT_DIR, 'experiments', 'f_ln_version', 'checkpoint_61200'
 )
 
 generation_cfg.inference = EasyDict()
